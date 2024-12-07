@@ -29,6 +29,17 @@ jobs:
               -Dsonar.sources=. \
               -Dsonar.host.url=$SONARQUBE_HOST_URL \
               -Dsonar.login=$SONARQUBE_TOKEN
+      
+      - name: Add .env files
+        env: 
+          REACT_APP_LOCALHOST_KEY: ${{ secrets.REACT_APP_LOCALHOST_KEY}}
+          DB_PORT: ${{ secrets.DB_PORT}}
+          DB_URL: ${{ secrets.DB_URL}}
+        run: |
+          echo "REACT_APP_LOCALHOST_KEY=$REACT_APP_LOCALHOST_KEY" > ./public/.env
+          echo "PORT=$DB_PORT > ./server/.env
+          echo "MONGO_URL=$DB_URL > ./server/.env
+
       - name: Build images
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
