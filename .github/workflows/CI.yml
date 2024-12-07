@@ -44,7 +44,7 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
-        uses: |
+        run: |
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
           docker build -t $DOCKER_USERNAME/frontend:latest  ./public/
           docker build -t $DOCKER_USERNAME/backend:latest  ./server/
@@ -66,7 +66,7 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
-        uses: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
       
       - name: Push image
         env: 
