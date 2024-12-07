@@ -1,0 +1,65 @@
+name: Security scan and publish images
+
+on:
+  pull_request:
+    branches:
+      - development
+  push:
+    branches:
+      - development
+
+jobs:
+  security-scan:
+    name: Security scan
+    runs-on: self-hosted
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: SonarQube Analysis
+        env:
+          SONARQUBE_TOKEN: ${{ secrets.SONAR_TOKEN}}
+          SONARQUBE_PROJECT_KEY: ${{ secrets.SONARQUBE_PROJECT_KEY}}
+          SONARQUBE_HOST_URL: ${{ secrets.SONARQUBE_HOST_URL}}
+        run: |
+          sonar-scanner \
+              -Dsonar.projectKey=$SONARQUBE_PROJECT_KEY \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=$SONARQUBE_HOST_URL \
+              -Dsonar.login=$SONARQUBE_TOKEN
+      - name: Build images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
+        uses: |
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          docker build -t $DOCKER_USERNAME/frontend:latest  ./public/
+          docker build -t $DOCKER_USERNAME/backend:latest  ./server/
+      
+      - name: Scan image with Trivy
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/frontend:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/backend:latest
+          
+  publish-image:
+    name: Publish images
+    runs-on: self-hosted
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Docker login
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
+        uses: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+      
+      - name: Push image
+        env: 
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+        run: |
+          docker push $DOCKER_USERNAME/frontend:latest
+          docker push $DOCKER_USERNAME/backend:latest
