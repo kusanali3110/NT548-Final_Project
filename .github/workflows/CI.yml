@@ -19,16 +19,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: SonarQube Analysis
-        env:
-          SONARQUBE_TOKEN: ${{ secrets.SONAR_TOKEN}}
-          SONARQUBE_PROJECT_KEY: ${{ secrets.SONARQUBE_PROJECT_KEY}}
-          SONARQUBE_HOST_URL: ${{ secrets.SONARQUBE_HOST_URL}}
-        run: |
-          sonar-scanner \
-              -Dsonar.projectKey=$SONARQUBE_PROJECT_KEY \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=$SONARQUBE_HOST_URL \
-              -Dsonar.login=$SONARQUBE_TOKEN
+        uses: SonarSource/sonarcloud-github-action@v2.1.0
+        with:
+          sonarQubeUrl: ${{ secrets.SONARQUBE_URL }}
+          token: ${{ secrets.SONARQUBE_TOKEN }}
+          projectKey: ${{ secrets.SONARQUBE_PROJECT_KEY }}
       
       - name: Add .env files
         env: 
