@@ -11,19 +11,20 @@ on:
 jobs:
   security-scan:
     name: Security scan
-    runs-on: ubuntu-latest 
+    runs-on: self-hosted
     if: github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: SonarQube Scan
+      - name: SonarQube Scan frontend
         uses: SonarSource/sonarqube-scan-action@v4.1.0
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONARQUBE_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-          SONAR_PROJECT_KEY: ${{ secrets.SONARQUBE_PROJECT_KEY}}
+        with:
+          args: >
+            -Dsonar.host.url=${{ secrets.SONARQUBE_HOST_URL}}
+            -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
+            -Dsonar.token=${{ secrets.SONARQUBE_TOKEN}}
         
       
       - name: Add .env files
