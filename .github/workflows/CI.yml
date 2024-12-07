@@ -23,6 +23,8 @@ jobs:
         env:
           SONAR_HOST_URL: ${{ secrets.SONARQUBE_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONARQUBE_PROJECT_KEY}}
+        
       
       - name: Add .env files
         env: 
