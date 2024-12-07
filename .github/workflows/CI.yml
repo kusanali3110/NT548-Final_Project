@@ -21,7 +21,7 @@ jobs:
       - name: SonarQube Analysis
         uses: SonarSource/sonarcloud-github-action@v2.1.0
         with:
-          sonarQubeUrl: ${{ secrets.SONARQUBE_URL }}
+          sonarQubeUrl: ${{ secrets.SONARQUBE_HOST_URL }}
           token: ${{ secrets.SONARQUBE_TOKEN }}
           projectKey: ${{ secrets.SONARQUBE_PROJECT_KEY }}
       
