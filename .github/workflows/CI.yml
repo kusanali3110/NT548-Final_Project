@@ -37,8 +37,8 @@ jobs:
           DB_URL: ${{ secrets.DB_URL}}
         run: |
           echo "REACT_APP_LOCALHOST_KEY=$REACT_APP_LOCALHOST_KEY" > ./public/.env
-          echo "PORT=$DB_PORT > ./server/.env
-          echo "MONGO_URL=$DB_URL > ./server/.env
+          echo "PORT=$DB_PORT" > ./server/.env
+          echo "MONGO_URL=$DB_URL" > ./server/.env
 
       - name: Build images
         env:
