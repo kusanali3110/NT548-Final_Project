@@ -26,7 +26,7 @@ jobs:
             -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
             -Dsonar.token=${{ secrets.SONARQUBE_TOKEN}}
             -Dsonar.sources=./
-            -Dsonar.scanner.jvm.opts="--add-opens java.base/java.lang=ALL-UNNAMED"
+            -Dsonar.scanner.jvm.opts="--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED"
             -X
         
       - name: SonarQube Scan frontend
