@@ -18,18 +18,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: SonarQube Analysis
-        env:
-          SONARQUBE_TOKEN: ${{ secrets.SONAR_TOKEN}}
-          SONARQUBE_PROJECT_KEY: ${{ secrets.SONARQUBE_PROJECT_KEY}}
-          SONARQUBE_HOST_URL: ${{ secrets.SONARQUBE_HOST_URL}}
-        run: |
-          sonar-scanner \
-              -Dsonar.projectKey=$SONARQUBE_PROJECT_KEY \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=$SONARQUBE_HOST_URL \
-              -Dsonar.login=$SONARQUBE_TOKEN
-      
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4.1.0
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONARQUBE_ORGANIZATION }}
+            -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
+            -Dsonar.token=${{ secrets.SONARQUBE_TOKEN}}
+            -Dsonar.sources=./
+
       - name: Add .env files
         env: 
           REACT_APP_LOCALHOST_KEY: ${{ secrets.REACT_APP_LOCALHOST_KEY}}
@@ -37,14 +34,14 @@ jobs:
           DB_URL: ${{ secrets.DB_URL}}
         run: |
           echo "REACT_APP_LOCALHOST_KEY=$REACT_APP_LOCALHOST_KEY" > ./public/.env
-          echo "PORT=$DB_PORT > ./server/.env
-          echo "MONGO_URL=$DB_URL > ./server/.env
+          echo "PORT=$DB_PORT" > ./server/.env
+          echo "MONGO_URL=$DB_URL" > ./server/.env
 
       - name: Build images
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
-        uses: |
+        run: |
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
           docker build -t $DOCKER_USERNAME/frontend:latest  ./public/
           docker build -t $DOCKER_USERNAME/backend:latest  ./server/
@@ -66,7 +63,7 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
-        uses: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
       
       - name: Push image
         env: 
