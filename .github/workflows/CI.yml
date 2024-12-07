@@ -22,9 +22,9 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v4.1.0
         with:
           args: >
-            -Dsonar.organization=${{ secrets.SONARQUBE_ORGANIZATION }}
+            -Dsonar.host.url=${{ secrets.SONARQUBE_HOST_URL }}
             -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
-            -Dsonar.token=${{ secrets.SONARQUBE_TOKEN}}
+            -Dsonar.token=${{ secrets.SONARQUBE_TOKEN }}
             -Dsonar.sources=./
 
       - name: Add .env files
