@@ -25,6 +25,8 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONARQUBE_HOST_URL}}
             -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
             -Dsonar.token=${{ secrets.SONARQUBE_TOKEN}}
+            -Dsonar.sources=src
+            -X
         
       
       - name: Add .env files
