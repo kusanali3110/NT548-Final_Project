@@ -25,10 +25,29 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONARQUBE_HOST_URL}}
             -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
             -Dsonar.token=${{ secrets.SONARQUBE_TOKEN}}
-            -Dsonar.sources=src
+            -Dsonar.sources=./
             -X
         
-      
+      - name: SonarQube Scan frontend
+        uses: SonarSource/sonarqube-scan-action@v4.1.0
+        with:
+          args: >
+            -Dsonar.host.url=${{ secrets.SONARQUBE_HOST_URL}}
+            -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
+            -Dsonar.token=${{ secrets.SONARQUBE_TOKEN}}
+            -Dsonar.sources=./public
+            -X
+
+      - name: SonarQube Scan backend
+        uses: SonarSource/sonarqube-scan-action@v4.1.0
+        with:
+          args: >
+            -Dsonar.host.url=${{ secrets.SONARQUBE_HOST_URL}}
+            -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
+            -Dsonar.token=${{ secrets.SONARQUBE_TOKEN}}
+            -Dsonar.sources=./server
+            -X
+
       - name: Add .env files
         env: 
           REACT_APP_LOCALHOST_KEY: ${{ secrets.REACT_APP_LOCALHOST_KEY}}
