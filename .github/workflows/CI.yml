@@ -3,9 +3,11 @@ name: Security scan and publish images
 on:
   pull_request:
     branches:
+      - main
       - development
   push:
     branches:
+      - main
       - development
 
 jobs:
@@ -17,6 +19,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4.1.0
@@ -26,6 +30,18 @@ jobs:
             -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
             -Dsonar.token=${{ secrets.SONARQUBE_TOKEN }}
             -Dsonar.sources=./
+          
+  publish-image:
+    name: Publish images
+    runs-on: self-hosted
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Docker login
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
       - name: Add .env files
         env: 
@@ -50,20 +66,9 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/frontend:latest
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/backend:latest
-          
-  publish-image:
-    name: Publish images
-    runs-on: self-hosted
-    if: github.event_name == 'push'
-
-    steps:
-      - name: Docker login
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
-        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/frontend:latest || exit 1
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/backend:latest || exit 1
+        continue-on-error: false
       
       - name: Push image
         env: 
@@ -71,3 +76,10 @@ jobs:
         run: |
           docker push $DOCKER_USERNAME/frontend:latest
           docker push $DOCKER_USERNAME/backend:latest
+
+      - name: Delete local images
+        env: 
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+        run: |
+          docker image rm $DOCKER_USERNAME/frontend:latest
+          docker image rm $DOCKER_USERNAME/backend:latest
