@@ -7,7 +7,11 @@ const app = express();
 const socket = require("socket.io");
 require("dotenv").config();
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://frontend-service.frontend.svc.cluster.local:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 
 mongoose
@@ -34,7 +38,7 @@ const server = app.listen(process.env.PORT, () =>
 );
 const io = socket(server, {
   cors: {
-    origin: "http://frontend-service.frontend.svc.cluster.local:5000",
+    origin: "http://frontend-service.frontend.svc.cluster.local:3000",
     credentials: true,
   },
 });
