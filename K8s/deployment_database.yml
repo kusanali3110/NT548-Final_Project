@@ -4,65 +4,72 @@ kind: Namespace
 metadata:
   name: mongodb
 
-# Persistent Volume Claim for MongoDB
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+spec:
+  capacity:
+    storage: 10Gi  # Kích thước lưu trữ cho MongoDB
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain  # Chính sách để giữ lại dữ liệu khi PV không còn được sử dụng
+  hostPath:
+    path: /mnt/data/mongo  # Thư mục lưu trữ trên node (có thể thay đổi khi triển khai trên cloud)
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mongodb-pvc
+  name: mongo-pvc
   namespace: mongodb
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
-
-# Service for MongoDB
+      storage: 10Gi  # Kích thước lưu trữ yêu cầu
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+  namespace: mongodb
+  labels:
+    app: mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:6.0
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db  # MongoDB sẽ lưu trữ dữ liệu tại /data/db trong container
+      volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc  # Gắn PVC đã tạo vào volume của pod
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: mongodb-service
   namespace: mongodb
 spec:
+  selector:
+    app: mongo
   ports:
-  - port: 27017
-    targetPort: 27017
-  clusterIP: None # Headless service for StatefulSet
-  selector:
-    app: mongodb
-
-# StatefulSet for MongoDB
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: mongodb
-  namespace: mongodb
-spec:
-  serviceName: mongodb-service
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mongodb
-  template:
-    metadata:
-      labels:
-        app: mongodb
-    spec:
-      containers:
-      - name: mongodb
-        image: mongo:6.0
-        ports:
-        - containerPort: 27017
-        volumeMounts:
-        - name: mongodb-data
-          mountPath: /data/db
-  volumeClaimTemplates:
-  - metadata:
-      name: mongodb-data
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: 10Gi
-
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+  clusterIP: None 
