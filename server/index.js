@@ -34,7 +34,7 @@ const server = app.listen(process.env.PORT, () =>
 );
 const io = socket(server, {
   cors: {
-    origin: "frontend-service.frontend.svc.cluster.local:5000",
+    origin: "http://frontend-service.frontend.svc.cluster.local:5000",
     credentials: true,
   },
 });
