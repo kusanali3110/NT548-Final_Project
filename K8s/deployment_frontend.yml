@@ -4,6 +4,7 @@ kind: Namespace
 metadata:
   name: frontend
 
+---
 # Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -31,6 +32,7 @@ spec:
         ports:
         - containerPort: 3000
 
+---
 # Frontend service
 apiVersion: v1
 kind: Service
