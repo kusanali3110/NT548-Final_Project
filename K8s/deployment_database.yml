@@ -5,31 +5,7 @@ metadata:
   name: mongodb
 
 ---
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mongo-pv
-spec:
-  capacity:
-    storage: 10Gi  # Kích thước lưu trữ cho MongoDB
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain  # Chính sách để giữ lại dữ liệu khi PV không còn được sử dụng
-  hostPath:
-    path: /mnt/data/mongo  # Thư mục lưu trữ trên node (có thể thay đổi khi triển khai trên cloud)
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mongo-pvc
-  namespace: mongodb
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi  # Kích thước lưu trữ yêu cầu
----
+# Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,17 +25,15 @@ spec:
     spec:
       containers:
         - name: mongo
-          image: mongo:6.0
+          image: nahidacunny/database:latest
           ports:
             - containerPort: 27017
           volumeMounts:
             - name: mongo-storage
-              mountPath: /data/db  # MongoDB sẽ lưu trữ dữ liệu tại /data/db trong container
-      volumes:
-        - name: mongo-storage
-          persistentVolumeClaim:
-            claimName: mongo-pvc  # Gắn PVC đã tạo vào volume của pod
+              mountPath: /data/db
+
 ---
+# Service
 apiVersion: v1
 kind: Service
 metadata:
