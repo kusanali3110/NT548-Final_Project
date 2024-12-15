@@ -4,6 +4,7 @@ kind: Namespace
 metadata:
   name: backend
 
+---
 # Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -31,6 +32,7 @@ spec:
         ports:
         - containerPort: 5000
 
+---
 # Backend service
 apiVersion: v1
 kind: Service
