@@ -8,19 +8,9 @@ const socket = require("socket.io");
 require("dotenv").config();
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (
-      /^http:\/\/localhost:\d+$/.test(origin) || // Chấp nhận localhost với bất kỳ cổng nào
-      origin === 'http://frontend-service.frontend.svc.cluster.local:3000' // Chấp nhận URL cố định
-    ) {
-      callback(null, true); // Chấp nhận yêu cầu
-    } else {
-      callback(new Error('Not allowed by CORS')); // Từ chối yêu cầu nếu không khớp
-    }
-  },
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
 }));
 app.use(express.json());
 
@@ -48,16 +38,7 @@ const server = app.listen(process.env.PORT, () =>
 );
 const io = socket(server, {
   cors: {
-    origin: function (origin, callback) {
-      if (
-        /^http:\/\/localhost:\d+$/.test(origin) || // Chấp nhận localhost với bất kỳ cổng nào
-        origin === 'http://frontend-service.frontend.svc.cluster.local:3000' // Chấp nhận URL cố định
-      ) {
-        callback(null, true); // Chấp nhận yêu cầu
-      } else {
-        callback(new Error('Not allowed by CORS')); // Từ chối yêu cầu nếu không khớp
-      }
-    },
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
   },
