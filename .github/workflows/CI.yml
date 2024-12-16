@@ -55,8 +55,20 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/netflix:${{ vars.VERSION }}  || exit 1
-        continue-on-error: false
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v ${{ github.workspace }}/trivy-results:/trivy-results \
+            aquasec/trivy:latest image \
+            --severity HIGH,CRITICAL \
+            --format table \
+            --output /trivy-results/trivy-report.txt \
+            $DOCKER_USERNAME/netflix:${{ vars.VERSION }}
+
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-scan-report
+          path: trivy-results/trivy-report.txt
       
       - name: Push image
         env: 
@@ -69,3 +81,4 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
           docker image rm $DOCKER_USERNAME/netflix:${{ vars.VERSION }}
+
