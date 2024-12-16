@@ -49,7 +49,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
         run: |
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-          docker build -t $DOCKER_USERNAME/netflix:{{ vars.VERSION }} --build-arg TMDB_V3_API_KEY=${{ secrets.TMDB_V3_API_KEY }}  ./App/
+          docker build -t $DOCKER_USERNAME/netflix:${{ vars.VERSION }} --build-arg TMDB_V3_API_KEY=${{ secrets.TMDB_V3_API_KEY }}  ./App/
       
       - name: Scan image with Trivy
         env:
