@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: netflix-app
-        image: nahidacunny/netflix:latest
+        image: nahidacunny/netflix:1.0.0
         ports:
         - containerPort: 80
 
