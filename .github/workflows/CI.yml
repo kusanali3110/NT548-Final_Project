@@ -58,6 +58,7 @@ jobs:
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v ${{ github.workspace }}/trivy-results:/trivy-results \
+            --user $(id -u):$(id -g) \
             aquasec/trivy:latest image \
             --severity HIGH,CRITICAL \
             --format table \
