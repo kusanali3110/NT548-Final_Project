@@ -43,43 +43,29 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
         run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
-      - name: Add .env files
-        env: 
-          REACT_APP_LOCALHOST_KEY: ${{ secrets.REACT_APP_LOCALHOST_KEY}}
-          DB_PORT: ${{ secrets.PORT}}
-          DB_URL: ${{ secrets.DB_URL}}
-        run: |
-          echo "REACT_APP_LOCALHOST_KEY=$REACT_APP_LOCALHOST_KEY" > ./public/.env
-          echo "PORT=$DB_PORT" >> ./server/.env
-          echo "MONGO_URL=\"$DB_URL\"" >> ./server/.env
-
       - name: Build images
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
         run: |
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-          docker build -t $DOCKER_USERNAME/frontend:latest  ./public/
-          docker build -t $DOCKER_USERNAME/backend:latest  ./server/
+          docker build -t $DOCKER_USERNAME/netflix:latest --build-arg TMDB_V3_API_KEY=${{ secrets.TMDB_V3_API_KEY }}  ./App/
       
       - name: Scan image with Trivy
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/frontend:latest || exit 1
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/backend:latest || exit 1
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/netflix:latest  || exit 1
         continue-on-error: false
       
       - name: Push image
         env: 
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker push $DOCKER_USERNAME/frontend:latest
-          docker push $DOCKER_USERNAME/backend:latest
+          docker push $DOCKER_USERNAME/netflix:latest 
 
       - name: Delete local images
         env: 
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker image rm $DOCKER_USERNAME/frontend:latest
-          docker image rm $DOCKER_USERNAME/backend:latest
+          docker image rm $DOCKER_USERNAME/netflix:latest 
