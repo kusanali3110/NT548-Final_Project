@@ -62,10 +62,10 @@ jobs:
         env: 
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker push $DOCKER_USERNAME/netflix:{{ vars.VERSION }}
+          docker push $DOCKER_USERNAME/netflix:${{ vars.VERSION }}
 
       - name: Delete local images
         env: 
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker image rm $DOCKER_USERNAME/netflix:{{ vars.VERSION }}
+          docker image rm $DOCKER_USERNAME/netflix:${{ vars.VERSION }}
