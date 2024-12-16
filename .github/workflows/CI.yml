@@ -49,31 +49,23 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
         run: |
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-          docker build -t $DOCKER_USERNAME/frontend:latest  ./client/
-          docker build -t $DOCKER_USERNAME/backend:latest  ./server/
-          docker build -t $DOCKER_USERNAME/database:latest ./database/
+          docker build -t $DOCKER_USERNAME/netflix:latest  ./App/
       
       - name: Scan image with Trivy
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/frontend:latest || exit 1
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/backend:latest || exit 1
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/database:latest || exit 1
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL $DOCKER_USERNAME/netflix:latest  || exit 1
         continue-on-error: false
       
       - name: Push image
         env: 
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker push $DOCKER_USERNAME/frontend:latest
-          docker push $DOCKER_USERNAME/backend:latest
-          docker push $DOCKER_USERNAME/database:latest
+          docker push $DOCKER_USERNAME/netflix:latest 
 
       - name: Delete local images
         env: 
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker image rm $DOCKER_USERNAME/frontend:latest
-          docker image rm $DOCKER_USERNAME/backend:latest
-          docker image rm $DOCKER_USERNAME/database:latest
+          docker image rm $DOCKER_USERNAME/netflix:latest 
