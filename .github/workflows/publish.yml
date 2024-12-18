@@ -90,6 +90,8 @@ jobs:
       - name: Commit and Push Changes
         run: |
           cd NT548-Final_Project-Config
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
           git add ./helm/values.yaml
           git commit -m "Update image tag to ${{ env.tag }}"
           git push origin main
