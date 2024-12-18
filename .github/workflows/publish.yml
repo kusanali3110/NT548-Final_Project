@@ -84,7 +84,7 @@ jobs:
       
       - name: Update Helm Chart with New Image Tag
         run: |
-          cd NT548-Final_Project-Config/helm
+          cd helm
           sed -i "s|tag:.*|tag: \"${{ env.tag }}\"|g" values.yaml
           echo "Updated values.yaml with tag: ${{ env.tag }}"
 
