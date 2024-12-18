@@ -78,8 +78,9 @@ jobs:
     steps:
 
       - name: Checkout Config Repo
-        run: |
-          git clone https://x-access-token:${{ secrets.PAT }}@github.com/kusanali3110/NT548-Final_Project-Config.git
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
       
       - name: Update Helm Chart with New Image Tag
         run: |
@@ -92,6 +93,7 @@ jobs:
           cd NT548-Final_Project-Config
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/kusanali3110/NT548-Final_Project-Config.git
           git add ./helm/values.yaml
           git commit -m "Update image tag to ${{ env.tag }}"
           git push origin main
