@@ -87,12 +87,11 @@ jobs:
       - name: Update Helm Chart with New Image Tag
         run: |
           cd helm
-          sed -i "s|tag:.*|tag: \"${{ env.tag }}\"|g" values.yaml
+          sed -i "s|tag:.*|tag: \"${{ env.tag }}\"|g" values.yaml 
           echo "Updated values.yaml with tag: ${{ env.tag }}"
 
       - name: Commit and Push Changes
         run: |
-          cd NT548-Final_Project-Config
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add ./helm/values.yaml
