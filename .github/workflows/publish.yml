@@ -7,26 +7,8 @@ on:
       - development
 
 jobs:
-  security-scan:
-    name: Security scan
-    runs-on: self-hosted
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4.1.0
-        with:
-          args: >
-            -Dsonar.host.url=${{ secrets.SONARQUBE_HOST_URL }}
-            -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
-            -Dsonar.token=${{ secrets.SONARQUBE_TOKEN }}
-            -Dsonar.sources=./
-          
   publish-image:
-    name: Publish images
-    needs: security-scan
+    name: Publish image
     runs-on: self-hosted
 
     steps:
@@ -86,6 +68,7 @@ jobs:
     
   update-changes:
     name: Update changes
+    needs: publish-image
     runs-on: ubuntu-latest
     steps:
 
