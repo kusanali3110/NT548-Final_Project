@@ -1,0 +1,25 @@
+name: Security scan and publish images
+
+on:
+  pull_request:
+    branches:
+      - main
+      - development
+
+jobs:
+  security-scan:
+    name: Security scan
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4.1.0
+        with:
+          args: >
+            -Dsonar.host.url=${{ secrets.SONARQUBE_HOST_URL }}
+            -Dsonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}
+            -Dsonar.token=${{ secrets.SONARQUBE_TOKEN }}
+            -Dsonar.sources=./
