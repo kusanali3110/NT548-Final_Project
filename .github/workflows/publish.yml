@@ -18,10 +18,15 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
         run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
-      # Generate Docker image tag using commit SHA
-      - name: Set Docker Tag
+      - name: Set Docker Image Tag
         id: set_tag
-        run: echo "tag=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "tag=latest" >> $GITHUB_ENV
+            echo "extra_tag=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "development" ]]; then
+            echo "tag=dev-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+          fi
 
       - name: Build images
         env:
@@ -73,21 +78,19 @@ jobs:
     steps:
 
       - name: Checkout Config Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: kusanali3110/NT548-Final_Project-Config
-          ssh-key: ${{ secrets.CONFIG_REPO_SSH_KEY }}
-          path: config-repo
+          token: ${{ secrets.PAT }}
       
       - name: Update Helm Chart with New Image Tag
         run: |
-          cd config-repo/helm
+          cd helm
           sed -i "s|tag:.*|tag: \"${{ env.tag }}\"|g" values.yaml
           echo "Updated values.yaml with tag: ${{ env.tag }}"
 
       - name: Commit and Push Changes
         run: |
-          cd config-repo
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add ./helm/values.yaml
