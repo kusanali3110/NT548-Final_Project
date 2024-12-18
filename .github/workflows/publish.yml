@@ -10,6 +10,8 @@ jobs:
   publish-image:
     name: Publish image
     runs-on: self-hosted
+    outputs:
+      image_tag: ${{ steps.set_tag.outputs.tag }}
 
     steps:
       - name: Docker login
@@ -21,12 +23,7 @@ jobs:
       - name: Set Docker Image Tag
         id: set_tag
         run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "tag=latest" >> $GITHUB_ENV
-            echo "extra_tag=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
-          elif [[ "${{ github.ref_name }}" == "development" ]]; then
-            echo "tag=dev-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
-          fi
+          echo "tag=dev-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
 
       - name: Build images
         env:
@@ -34,7 +31,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
         run: |
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-          docker build -t $DOCKER_USERNAME/netflix:${{ env.tag }} --build-arg TMDB_V3_API_KEY=${{ secrets.TMDB_V3_API_KEY }}  ./App/
+          docker build -t $DOCKER_USERNAME/netflix:${{ steps.set_tag.outputs.tag }} --build-arg TMDB_V3_API_KEY=${{ secrets.TMDB_V3_API_KEY }}  ./App/
       
       - name: Scan image with Trivy
         env:
@@ -47,7 +44,7 @@ jobs:
             --severity HIGH,CRITICAL \
             --format table \
             --output /trivy-results/trivy-report.txt \
-            $DOCKER_USERNAME/netflix:${{ env.tag }}
+            $DOCKER_USERNAME/netflix:${{ steps.set_tag.outputs.tag }}
           sudo chown -R $USER:$USER ${{ github.workspace }}/trivy-results
 
       - name: Upload Trivy report
@@ -63,18 +60,18 @@ jobs:
         env: 
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker push $DOCKER_USERNAME/netflix:${{ env.tag }}
+          docker push $DOCKER_USERNAME/netflix:${{ steps.set_tag.outputs.tag }}
 
       - name: Delete local images
         env: 
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
         run: |
-          docker image rm $DOCKER_USERNAME/netflix:${{ env.tag }}
+          docker image rm $DOCKER_USERNAME/netflix:${{ steps.set_tag.outputs.tag }}
     
   update-changes:
     name: Update changes
     needs: publish-image
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
 
       - name: Checkout Config Repo
@@ -87,14 +84,14 @@ jobs:
       - name: Update Helm Chart with New Image Tag
         run: |
           cd helm
-          sed -i "s|tag:.*|tag: \"${{ env.tag }}\"|g" values.yaml 
-          echo "Updated values.yaml with tag: ${{ env.tag }}"
+          sed -i "s|tag:.*|tag: \"${{ needs.publish-image.outputs.image_tag }}\"|g" values.yaml 
+          echo "Updated values.yaml with tag: ${{ needs.publish-image.outputs.image_tag }}"
 
       - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add ./helm/values.yaml
-          git commit -m "Update image tag to ${{ env.tag }}"
+          git commit -m "Update image tag to ${{ needs.publish-image.outputs.image_tag }}"
           git push origin main
 
