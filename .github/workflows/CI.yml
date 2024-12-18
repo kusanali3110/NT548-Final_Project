@@ -26,6 +26,7 @@ jobs:
           
   publish-image:
     name: Publish images
+    needs: security-scan
     runs-on: self-hosted
 
     steps:
@@ -91,7 +92,7 @@ jobs:
       - name: Checkout Config Repo
         uses: actions/checkout@v3
         with:
-          repository: ${{ vars.CONFIG_REPO }}
+          repository: kusanali3110/NT548-Final_Project-Config
           ssh-key: ${{ secrets.CONFIG_REPO_SSH_KEY }}
           path: config-repo
       
