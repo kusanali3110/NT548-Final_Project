@@ -1,0 +1,97 @@
+name: Security scan and publish images
+
+on:
+  push:
+    branches:
+      - main
+      - development
+
+jobs:
+  publish-image:
+    name: Publish image
+    runs-on: self-hosted
+    outputs:
+      image_tag: ${{ steps.set_tag.outputs.tag }}
+
+    steps:
+      - name: Docker login
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+      - name: Set Docker Image Tag
+        id: set_tag
+        run: |
+          echo "tag=dev-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Build images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
+        run: |
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          docker build -t $DOCKER_USERNAME/netflix:${{ steps.set_tag.outputs.tag }} --build-arg TMDB_V3_API_KEY=${{ secrets.TMDB_V3_API_KEY }}  ./App/
+      
+      - name: Scan image with Trivy
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v ${{ github.workspace }}/trivy-results:/trivy-results \
+            aquasec/trivy:latest image \
+            --severity HIGH,CRITICAL \
+            --format table \
+            --output /trivy-results/trivy-report.txt \
+            $DOCKER_USERNAME/netflix:${{ steps.set_tag.outputs.tag }}
+          sudo chown -R $USER:$USER ${{ github.workspace }}/trivy-results
+
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-scan-report
+          path: trivy-results/trivy-report.txt
+      
+      - name: Cleanup Trivy results
+        run: rm -rf ${{ github.workspace }}/trivy-results
+      
+      - name: Push image
+        env: 
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+        run: |
+          docker push $DOCKER_USERNAME/netflix:${{ steps.set_tag.outputs.tag }}
+
+      - name: Delete local images
+        env: 
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+        run: |
+          docker image rm $DOCKER_USERNAME/netflix:${{ steps.set_tag.outputs.tag }}
+    
+  update-changes:
+    name: Update changes
+    needs: publish-image
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout Config Repo
+        uses: actions/checkout@v4
+        with:
+          repository: kusanali3110/NT548-Final_Project-Config
+          token: ${{ secrets.PAT }}
+          ref: main
+      
+      - name: Update Helm Chart with New Image Tag
+        run: |
+          cd helm
+          sed -i "s|tag:.*|tag: \"${{ needs.publish-image.outputs.image_tag }}\"|g" values.yaml 
+          echo "Updated values.yaml with tag: ${{ needs.publish-image.outputs.image_tag }}"
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add ./helm/values.yaml
+          git commit -m "Update image tag to ${{ needs.publish-image.outputs.image_tag }}"
+          git push origin main
+
